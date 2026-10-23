@@ -11,13 +11,28 @@ const elEstado = document.getElementById('estado');
 const btnReviver = document.getElementById('btnReviver');
 
 let vivo = true;
+let primeiroEstado = true; // o estado que chega logo ao conectar não conta como morte
+
+// qual som toca em cada botão
+const SOM_DO_COMANDO = {
+  'REVIVER': 'reviver',
+  'PARAR': 'parar',
+  'SFX:1': 'risada',
+  'SFX:2': 'sussurro',
+  'SFX:3': 'grito',
+  'SFX:4': 'sino',
+  'SFX:5': 'trovao',
+};
 
 let ws;
 
 function conectar() {
   ws = new WebSocket('ws://' + location.host);
 
-  ws.onopen = () => registrar('Conectado ao servidor');
+  ws.onopen = () => {
+    primeiroEstado = true;
+    registrar('Conectado ao servidor');
+  };
 
   ws.onclose = () => {
     mostrarStatus('Servidor fora do ar, tentando reconectar...', 'erro');
@@ -40,7 +55,11 @@ function conectar() {
       elSensor.classList.toggle('perto', perto);
       elAviso.textContent = perto ? 'Tem alguém bem perto do boneco...' : '';
     } else if (msg.tipo === 'estado') {
-      if (msg.vivo !== vivo) registrar(msg.vivo ? 'O humano voltou à vida' : 'O humano morreu');
+      if (msg.vivo !== vivo) {
+        registrar(msg.vivo ? 'O humano voltou à vida' : 'O humano morreu');
+        if (!msg.vivo && !primeiroEstado) Sons.tocar('oof');
+      }
+      primeiroEstado = false;
       mostrarEstado(msg.vivo);
     } else if (msg.tipo === 'evento') {
       registrar(msg.texto);
@@ -76,8 +95,25 @@ function registrar(texto) {
   while (elLog.children.length > 50) elLog.lastChild.remove();
 }
 
+const btnSom = document.getElementById('btnSom');
+
+function atualizarBotaoSom() {
+  const textos = { inicial: 'Ativar sons', ligado: 'Sons: ligados', desligado: 'Sons: desligados' };
+  btnSom.textContent = textos[Sons.estado()];
+}
+
+btnSom.addEventListener('click', () => {
+  Sons.alternar();
+  atualizarBotaoSom();
+});
+
 document.querySelectorAll('button[data-cmd]').forEach((botao) => {
-  botao.addEventListener('click', () => enviar(botao.dataset.cmd));
+  botao.addEventListener('click', () => {
+    Sons.ativarSePrimeiraVez();
+    atualizarBotaoSom();
+    Sons.tocar(SOM_DO_COMANDO[botao.dataset.cmd]);
+    enviar(botao.dataset.cmd);
+  });
 });
 
 conectar();
