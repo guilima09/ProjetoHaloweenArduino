@@ -47,7 +47,8 @@ void loop() {
     meuServo.write(90); // Gira para 90 graus
     delay(500);
 
-    tocarMusica();
+    // tocarMusica(); // música de antes, descomente para voltar a usar
+    tocarGrito();
 
     // Retorna o servo e apaga os LEDs após tocar
     meuServo.write(0);
@@ -73,6 +74,29 @@ void tocarMusica() {
   }
 }
 
+void tocarGrito() {
+  // 1) Sobe rápido e tremendo, como um grito começando
+  for (int f = 600; f < 3200; f += 40) {
+    int tremor = ((f / 40) % 2 == 0) ? 60 : -60;
+    tone(buzzer, f + tremor);
+    delay(6);
+  }
+
+  // 2) Segura no agudo, pulando entre notas altas (o grito se sustentando)
+  for (int i = 0; i < 40; i++) {
+    tone(buzzer, 2800 + random(0, 900));
+    delay(random(15, 30));
+  }
+
+  // 3) Cai com a "voz" falhando
+  for (int f = 3000; f > 400; f -= 60) {
+    tone(buzzer, f + random(-150, 150));
+    delay(8);
+  }
+
+  noTone(buzzer);
+}
+
 double calcularDistancia() {
   digitalWrite(pinoTrig, LOW);
   delayMicroseconds(2);
@@ -89,4 +113,3 @@ double calcularDistancia() {
 
   return distanciaCM;
 }
-
