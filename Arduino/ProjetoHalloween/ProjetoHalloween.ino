@@ -20,9 +20,7 @@ Servo meuServo;
 int musical[] = {NOTE_CS5, NOTE_B4, NOTE_GS4, NOTE_B4, NOTE_GS4, NOTE_A4, NOTE_GS4, NOTE_B4};
 int duracoesMusical[] = {2, 2, 2, 2, 2, 4, 2, 1};
 
-int gameOfThrones[] = {NOTE_G4, NOTE_C4, NOTE_DS4, NOTE_F4, NOTE_G4, NOTE_C4, NOTE_DS4, NOTE_F4,
-                      NOTE_G4, NOTE_C4, NOTE_DS4, NOTE_F4, NOTE_G4, NOTE_C4, NOTE_DS4, NOTE_F4};
-int duracoesGOT[] = {2, 2, 4, 4, 2, 2, 4, 4, 2, 2, 4, 4, 2, 2, 4, 4};
+bool estaMorto = false;
 
 void setup() {
   Serial.begin(9600);
@@ -39,21 +37,24 @@ void setup() {
 void loop() {
   double dist = calcularDistancia();
 
-  if (dist < 100000) {
-    digitalWrite(ledOlho, HIGH);
-    digitalWrite(ledMorto, HIGH);
+  if (Serial.available() > 0) {
+    String comando = Serial.readStringUntil('\n');
+    processarComando(comando);
+  }
 
-    // Movimentação do servo
-    meuServo.write(90); // Gira para 90 graus
-    delay(500);
+  if (dist < 5) {
+    if (!estaMorto) {
+      digitalWrite(ledOlho, HIGH);
+      digitalWrite(ledMorto, HIGH);
 
-    // tocarMusica(); // música de antes, descomente para voltar a usar
-    tocarGrito();
+      meuServo.write(180); // Gira para 180 graus
+      delay(500);
+      tocarGrito();
 
-    // Retorna o servo e apaga os LEDs após tocar
-    meuServo.write(0);
-    digitalWrite(ledOlho, LOW);
-    digitalWrite(ledMorto, LOW);
+      digitalWrite(ledOlho, LOW);
+      digitalWrite(ledMorto, LOW);
+    }
+    
   } else {
     digitalWrite(ledOlho, LOW);
     digitalWrite(ledMorto, LOW);
@@ -62,17 +63,26 @@ void loop() {
   delay(500);
 }
 
-void tocarMusica() {
-  for (int i = 0; i < 8; i++) {
-    int duracaoNota = 500 / duracoesMusical[i];
-    tone(buzzer, musical[i], duracaoNota); // Usa a variável 'buzzer'
-    
-    int pausaEntreNotas = duracaoNota * 1.3;
-    delay(pausaEntreNotas);
-    
-    noTone(buzzer);
+void processarComando(String comando) {
+  comando.trim();
+  comando.toUpperCase();
+
+  if (comando == "REVIVER") {
+    if (estaMorto) {
+      estaMorto = false;
+      meuServo.write(0);
+    } else {
+      Serial.println("Humano já vivo!");
+    }
+  }
+  else if (comando == "PARAR") {
+    // A CADIFICAR
+  }
+  else if (comando.length() > 0) {
+    Serial.prinln("Comando desconhecido.");
   }
 }
+
 
 void tocarGrito() {
   // 1) Sobe rápido e tremendo, como um grito começando
