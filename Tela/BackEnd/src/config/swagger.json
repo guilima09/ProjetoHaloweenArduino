@@ -1,0 +1,96 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Boneco de Vodu - Halloween Arduino",
+    "version": "1.0.0",
+    "description": "API REST para monitoramento e controle do boneco de vodu conectado via Arduino."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor Local"
+    }
+  ],
+  "paths": {
+    "/api/status": {
+      "get": {
+        "summary": "Consulta o estado atual",
+        "description": "Retorna se o humano está vivo, a última distância lida pelo sensor e o status da conexão USB com o Arduino.",
+        "responses": {
+          "200": {
+            "description": "Estado retornado com sucesso",
+            "content": {
+              "application/json": {
+                "example": {
+                  "vivo": true,
+                  "distancia": 45,
+                  "arduinoConectado": false,
+                  "portaSerial": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comando": {
+      "post": {
+        "summary": "Envia um comando para o Arduino",
+        "description": "Permite enviar comandos como REVIVER, PARAR e efeitos sonoros SFX:1 a SFX:5.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "comando": {
+                    "type": "string",
+                    "example": "PARAR",
+                    "enum": ["REVIVER", "PARAR", "SFX:1", "SFX:2", "SFX:3", "SFX:4", "SFX:5"]
+                  }
+                },
+                "required": ["comando"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comando executado com sucesso"
+          },
+          "400": {
+            "description": "Campo comando ausente"
+          },
+          "409": {
+            "description": "Conflito: humano já está vivo"
+          },
+          "422": {
+            "description": "Comando não reconhecido"
+          },
+          "503": {
+            "description": "Arduino desconectado"
+          }
+        }
+      }
+    },
+    "/api/reviver": {
+      "post": {
+        "summary": "Revive o humano",
+        "description": "Atalho semântico para o comando REVIVER.",
+        "responses": {
+          "200": {
+            "description": "Humano revivido com sucesso"
+          },
+          "409": {
+            "description": "O humano já está vivo"
+          },
+          "503": {
+            "description": "Arduino desconectado"
+          }
+        }
+      }
+    }
+  }
+}
+
