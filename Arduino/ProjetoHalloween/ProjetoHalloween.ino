@@ -10,10 +10,10 @@ const int ledOlho = 6;
 const int ledMorto = 7;
 
 // Buzzer:
-const int buzzer = 3; // Adicionada a atribuição do pino e ';'
+const int buzzer = 3;
 
 // Servo motor:
-const int pinoServo = 9; // Alterado para o pino 9 para evitar conflito com ledOlho (pino 6)
+const int pinoServo = 9;
 Servo meuServo;
 
 // Músicas:
@@ -21,6 +21,7 @@ int musical[] = {NOTE_CS5, NOTE_B4, NOTE_GS4, NOTE_B4, NOTE_GS4, NOTE_A4, NOTE_G
 int duracoesMusical[] = {2, 2, 2, 2, 2, 4, 2, 1};
 
 bool estaMorto = false;
+bool continuar = true;
 
 void setup() {
   Serial.begin(9600);
@@ -42,14 +43,14 @@ void loop() {
     processarComando(comando);
   }
 
-  if (dist < 5) {
+  if (continuar && dist < 5) {
     if (!estaMorto) {
       digitalWrite(ledOlho, HIGH);
       digitalWrite(ledMorto, HIGH);
 
+      //tocarGrito();
       meuServo.write(180); // Gira para 180 graus
       delay(500);
-      tocarGrito();
 
       digitalWrite(ledOlho, LOW);
       digitalWrite(ledMorto, LOW);
@@ -67,7 +68,7 @@ void processarComando(String comando) {
   comando.trim();
   comando.toUpperCase();
 
-  if (comando == "REVIVER") {
+  if (comando == "REVIVER" && continuar) {
     if (estaMorto) {
       estaMorto = false;
       meuServo.write(0);
@@ -76,10 +77,10 @@ void processarComando(String comando) {
     }
   }
   else if (comando == "PARAR") {
-    // A CADIFICAR
+    continuar = !continuar;
   }
   else if (comando.length() > 0) {
-    Serial.prinln("Comando desconhecido.");
+    Serial.println("Comando desconhecido.");
   }
 }
 
